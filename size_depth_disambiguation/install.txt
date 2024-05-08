@@ -1,0 +1,2 @@
+!pip install trimesh open3d pyransac3d fvcore iopath timm
+!pip install git+https://github.com/cocodataset/panopticapi.git
