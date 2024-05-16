@@ -71,6 +71,7 @@ class DemoData(base):
         load_data = {}
         annot = self.annot[index]
         imgname = self.imnames[index]
+        print(imgname)  #TODO: remove. for testing to ensure data and label match
         intris = self.intris[index]
 
         # Load image

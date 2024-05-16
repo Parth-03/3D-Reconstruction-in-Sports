@@ -93,25 +93,64 @@ Custom training function.
 """
 
 
+def process_batch(batch, model, device):
+    batch_output = []
+    for image in batch:
+        input = torch.from_numpy(image).to(device)
+        pred = model(input)
+        batch_output.append(pred)
+    return batch_output
+
+
 def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=20):
     num_batches = loader.len // batch_size - 1
     print(num_batches)
 
-    # Shuffle data. Shuffle labels, find indices corresponding to original order, use indices to get data.
+    # Shuffle data. Do this by shuffling indices, using indices to get data and labels, thus ensuring a match.
+    data_indices = np.arange(len(labels))
     # 3.) set up training framework (ensure use align humans)
+    epoch_losses = []
+    batch_losses = []
     for epoch in range(num_epochs):
         epoch_loss = 0
         for i in range(num_batches):
             if i != num_batches - 1:
-                batch_imgs = train_x[i * batch_size: (i + 1) * batch_size]
-                batch_labels = labels[i * batch_size: (i + 1) * batch_size]
+                batch_labels = [labels[j] for j in data_indices[i * batch_size: (i + 1) * batch_size]]
+                batch_imgs = [loader[j] for j in data_indices[i * batch_size: (i + 1) * batch_size]]
             else:  # add remainder
-                batch_imgs = train_x[i * batch_size:]
-                batch_labels = labels[i * batch_size:]
+                batch_labels = [labels[j] for j in data_indices[i * batch_size:]]
+                batch_imgs = [loader[j] for j in data_indices[i * batch_size:]]
+            print(f"Processing batch {i + 1}/{num_batches} with {len(batch_imgs)} samples")
             optimizer.zero_grad()
-            #batch_data =
-           # pred = model.model(batch_data)
+            batch_output = process_batch(batch_imgs, model, device)
 
-    # 4.) import and use custom loss function
-    # 4a.) use separate losses for shape and translation, then add losses
+            batch_output, batch_labels = align_humans(batch_output, batch_labels)
+            # 4.) import and use custom loss function
+            # 4a.) use separate losses for shape and translation, then add losses
+            batch_loss = smpl_params_loss(batch_output, batch_labels, ['transl'], ['trans'])
+
+            if torch.isnan(batch_loss):
+                print(f"NaN detected in loss at batch {i + 1}")
+
+            batch_loss.backward()
+
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.01)
+            optimizer.step()
+
+            # Record loss
+            batch_losses.append(batch_loss.item())
+            epoch_loss += batch_loss.item()
+            print(f"Epoch {epoch + 1}, Batch {(i + 1)}, Loss: {batch_loss.item()}")
+
+            # Clean up
+            del batch_labels, batch_imgs, batch_output, batch_loss
+            torch.cuda.empty_cache()
+
+            for name, param in model.named_parameters():
+                if param.requires_grad:
+                    print(f"{name} param norm: {param.norm()}")
+
+        average_epoch_loss = epoch_loss / (num_batches)
+        epoch_losses.append(average_epoch_loss)
+        print(f"Epoch {epoch + 1} Average Loss: {average_epoch_loss}")
 

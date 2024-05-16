@@ -24,20 +24,20 @@ def main(**args):
     device = torch.device(index=args.get('gpu_index'), type='cuda')
 
     # =================== Create the dataloader ================== #
-    # print("Making dataset...")
-    # dataset = DatasetLoader(dtype=dtype, smpl=smpl, **args)
-    # train_dataset = dataset.load_train_data()
-    # train_dataset.human_detection()
-    # print("Dataset created.")
-    #
-    # # write dataset to file so you don't have to preprocess everything again.
-    # with open("data/Panda/Panda_imgs.pkl", 'wb') as file:
-    #     pickle.dump(train_dataset, file)
+    print("Making dataset...")
+    dataset = DatasetLoader(dtype=dtype, smpl=smpl, **args)
+    train_dataset = dataset.load_train_data()
+    train_dataset.human_detection()
+    print("Dataset created.")
+
+    # write dataset to file so you don't have to preprocess everything again.
+    with open("data/Panda/Panda_imgs.pkl", 'wb') as file:
+        pickle.dump(train_dataset, file)
     # ============================================================ #
 
     # uncomment this and comment above if above already ran
-    with open("data/Panda/Panda_imgs.pkl", "rb") as file:
-        train_dataset = pickle.load(file)
+    # with open("data/Panda/full_Panda_imgs.pkl", "rb") as file:
+    #     train_dataset = pickle.load(file)
     print(len(train_dataset))
     # =================== Processing labels ====================== #
     with open("data/Panda/Panda_labels.pkl", "rb") as file:
