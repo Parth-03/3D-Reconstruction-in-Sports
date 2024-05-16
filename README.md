@@ -13,17 +13,16 @@ Yuni wrote run_sdo.py. It contains the size and depth optimization code for the 
 In order to run it, please follow the following steps:
 
 1. Clone the repository.
-2. Run the requirements.txt file in the GroupRec folder. Alternatively, feel free to use the requirements files from the other folders although some libries are out of date and would involve manually installation. 
-3. From the drive, download the model files and place them accordingly- 
+2. Run the requirements.txt file in the GroupRec folder. Alternatively, feel free to use the requirements files from the other folders although some libries are out of date and would involve manually installation.
+3. From the drive, download the model files and place them accordingly-
     - finetuned-multiHMR_896_L.pt and SMPLX_Neutral.npz into main/models
     - bytetrack_x_mot17.pth, relation_joint.pkl, SMPL_Neutral.pkl and SMPL_MEAN_PARAMS.npz in main/data
 4. Run using python run.py
 5. The generated 3D scene will be stored in a new output folder.
 
 Note: This implementation is only for a sample demo inference. Feel free to add your own image as the 'sample.png'.
-Also, if facing issues in setting up the environment, the recommended alternative is to run the following sections individually as described below preferrably in an integrated IDE rather than a notebook. 
+Also, if facing issues in setting up the environment, the recommended alternative is to run the following sections individually as described below preferrably in an integrated IDE rather than a notebook.
 Similarly, while there isn't explicitly a need for a virutal environment, using one can help for any potential requirements disparity that may occur.
-
 
 ## Multi-HMR
 
@@ -80,4 +79,4 @@ The function run_size_depth_opt() takes in an array of outputs produced by the M
 
 ### To run the original project demo
 
-To run the demo of the original project demo, upload run_sdd.ipynb as Google Colab and follow the instructions on the notebook.
+To run the demo of the original project demo, upload run_sdd.ipynb as Google Colab and follow the instructions on the notebook. You can find the original source code inside size_depth_disambiguation or [here](https://github.com/nicolasugrinovic/size_depth_disambiguation).
