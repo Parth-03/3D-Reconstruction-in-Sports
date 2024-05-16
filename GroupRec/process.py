@@ -13,6 +13,7 @@ from tqdm import tqdm
 import time
 from copy import copy
 import pickle
+import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 
 def extract_valid(data):
@@ -141,8 +142,7 @@ def smpl_trans_loss(predictions, gts, field, gt_field, device) -> torch.Tensor:
         for human in humans:
             all_gts.append(human[gt_field])
 
-    #criterion = torch.nn.L1Loss()
-    criterion = torch.nn.MSELoss()
+    criterion = torch.nn.L1Loss()
 
     all_gts = torch.stack([torch.tensor(item).to(device) for item in all_gts])
 
@@ -222,7 +222,18 @@ def train(model, loader, labels, device=torch.device('cpu'), num_epochs=10, batc
         average_epoch_loss = epoch_loss / num_batches
         epoch_losses.append(average_epoch_loss)
         print(f"Epoch {epoch + 1} Average Loss: {average_epoch_loss}")
+        model.save_model(epoch, 'train')  # save every epoch
 
+    # automatically plot epoch
+    # plt.plot(np.arange(num_epochs), epoch_losses)
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Average Loss')
+    # plt.title('SMPL Trans Loss Over Time')
+    # plt.show()
     with open("data/Panda/epoch_losses.pkl", 'wb') as file:
         pickle.dump(epoch_losses, file)
-    model.save_model()
+
+    with open("data/Panda/batch_losses.pkl", 'wb') as file:
+        pickle.dump(batch_losses, file)
+
+    model.save_model(num_epochs, 'final_train')  # save every epoch
