@@ -2,9 +2,28 @@
 
 Multi Human 3D Reconstruction from single RGB images for various scenarios in Sports
 
+Github: https://github.com/Parth-03/3D-Reconstruction-in-Sports
+
 ## Main
 
 ### Contributors
+
+Parth wrote run.py. It contains the main code for the implementation of the project pipeline.
+Yuni wrote run_sdo.py. It contains the size and depth optimization code for the scale and translation parameters
+In order to run it, please follow the following steps:
+
+1. Clone the repository.
+2. Run the requirements.txt file in the GroupRec folder. Alternatively, feel free to use the requirements files from the other folders although some libries are out of date and would involve manually installation. 
+3. From the drive, download the model files and place them accordingly- 
+    - finetuned-multiHMR_896_L.pt and SMPLX_Neutral.npz into main/models
+    - bytetrack_x_mot17.pth, relation_joint.pkl, SMPL_Neutral.pkl and SMPL_MEAN_PARAMS.npz in main/data
+4. Run using python run.py
+5. The generated 3D scene will be stored in a new output folder.
+
+Note: This implementation is only for a sample demo inference. Feel free to add your own image as the 'sample.png'.
+Also, if facing issues in setting up the environment, the recommended alternative is to run the following sections individually as described below preferrably in an integrated IDE rather than a notebook. 
+Similarly, while there isn't explicitly a need for a virutal environment, using one can help for any potential requirements disparity that may occur.
+
 
 ## Multi-HMR
 
