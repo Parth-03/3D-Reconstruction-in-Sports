@@ -24,7 +24,6 @@ class DemoData(base):
 
         self.max_people = 8
         self.eval = True
-
         self.imnames = [os.path.join(self.dataset_dir, img) for img in os.listdir(self.dataset_dir)]
         self.annot = []
         self.intris = []
@@ -144,8 +143,21 @@ class DemoData(base):
     def __len__(self):
         return self.len
 
+class TrainData(DemoData):
+    def __init__(self, train=True, dtype=torch.float32, data_folder='', name='', smpl=None):
+        super(TrainData, self).__init__(train=train, dtype=dtype, data_folder=data_folder, name=name, smpl=smpl)
+        self.imnames = self.get_image_paths(self.dataset_dir)
 
-
+    @staticmethod
+    def get_image_paths(root_folder):
+        image_paths = []
+        for root, dirs, files in os.walk(root_folder):
+            for file in files:
+                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.tif')):
+                    # Generate the path and replace backslashes with forward slashes
+                    path = os.path.join(root, file).replace('\\', '/')
+                    image_paths.append(path)
+        return image_paths
 
 
 

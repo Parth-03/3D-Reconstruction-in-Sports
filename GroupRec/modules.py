@@ -9,7 +9,7 @@ import os
 import torch
 import time
 import yaml
-from datasets.demo_data import DemoData
+from datasets.demo_data import DemoData, TrainData
 from utils.imutils import vis_img
 from utils.logger import Logger
 from loss_func import *
@@ -584,5 +584,8 @@ class DatasetLoader():
 
     def load_demo_data(self):
         test_dataset = DemoData(False, self.dtype, self.data_folder, '', self.smpl)
-
         return test_dataset
+
+    def load_train_data(self):
+        train_dataset = TrainData(False, self.dtype, self.data_folder, '', self.smpl)
+        return train_dataset

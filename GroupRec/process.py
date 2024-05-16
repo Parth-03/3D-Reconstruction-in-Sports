@@ -12,36 +12,38 @@ import cv2
 from tqdm import tqdm
 import time
 
+
 def extract_valid(data):
     batch_size, agent_num, d = data['keypoints'].shape[:3]
-    valid = data['valid'].reshape(-1,)
+    valid = data['valid'].reshape(-1, )
 
-    data['center'] = data['center'] #.reshape(batch_size*agent_num, -1)[valid == 1]
-    data['scale'] = data['scale'] #.reshape(batch_size*agent_num,)[valid == 1]
-    data['img_h'] = data['img_h'] #.reshape(batch_size*agent_num,)[valid == 1]
-    data['img_w'] = data['img_w'] #.reshape(batch_size*agent_num,)[valid == 1]
-    data['focal_length'] = data['focal_length'] #.reshape(batch_size*agent_num,)[valid == 1]
+    data['center'] = data['center']  #.reshape(batch_size*agent_num, -1)[valid == 1]
+    data['scale'] = data['scale']  #.reshape(batch_size*agent_num,)[valid == 1]
+    data['img_h'] = data['img_h']  #.reshape(batch_size*agent_num,)[valid == 1]
+    data['img_w'] = data['img_w']  #.reshape(batch_size*agent_num,)[valid == 1]
+    data['focal_length'] = data['focal_length']  #.reshape(batch_size*agent_num,)[valid == 1]
 
-    data['valid_img_h'] = data['img_h'].reshape(batch_size*agent_num,)[valid == 1]
-    data['valid_img_w'] = data['img_w'].reshape(batch_size*agent_num,)[valid == 1]
-    data['valid_focal_length'] = data['focal_length'].reshape(batch_size*agent_num,)[valid == 1]
-    data['has_3d'] = data['has_3d'].reshape(batch_size*agent_num,1)[valid == 1]
-    data['has_smpl'] = data['has_smpl'].reshape(batch_size*agent_num,1)[valid == 1]
-    data['verts'] = data['verts'].reshape(batch_size*agent_num, 6890, 3)[valid == 1]
-    data['gt_joints'] = data['gt_joints'].reshape(batch_size*agent_num, -1, 4)[valid == 1]
-    data['pose'] = data['pose'].reshape(batch_size*agent_num, 72)[valid == 1]
-    data['betas'] = data['betas'].reshape(batch_size*agent_num, 10)[valid == 1]
-    data['keypoints'] = data['keypoints'].reshape(batch_size*agent_num, 26, 3)[valid == 1]
-    data['gt_cam_t'] = data['gt_cam_t'].reshape(batch_size*agent_num, 3)[valid == 1]
+    data['valid_img_h'] = data['img_h'].reshape(batch_size * agent_num, )[valid == 1]
+    data['valid_img_w'] = data['img_w'].reshape(batch_size * agent_num, )[valid == 1]
+    data['valid_focal_length'] = data['focal_length'].reshape(batch_size * agent_num, )[valid == 1]
+    data['has_3d'] = data['has_3d'].reshape(batch_size * agent_num, 1)[valid == 1]
+    data['has_smpl'] = data['has_smpl'].reshape(batch_size * agent_num, 1)[valid == 1]
+    data['verts'] = data['verts'].reshape(batch_size * agent_num, 6890, 3)[valid == 1]
+    data['gt_joints'] = data['gt_joints'].reshape(batch_size * agent_num, -1, 4)[valid == 1]
+    data['pose'] = data['pose'].reshape(batch_size * agent_num, 72)[valid == 1]
+    data['betas'] = data['betas'].reshape(batch_size * agent_num, 10)[valid == 1]
+    data['keypoints'] = data['keypoints'].reshape(batch_size * agent_num, 26, 3)[valid == 1]
+    data['gt_cam_t'] = data['gt_cam_t'].reshape(batch_size * agent_num, 3)[valid == 1]
 
-    imgname = (np.array(data['imgname']).T).reshape(batch_size*agent_num,)[valid.detach().cpu().numpy() == 1]
+    imgname = (np.array(data['imgname']).T).reshape(batch_size * agent_num, )[valid.detach().cpu().numpy() == 1]
     data['imgname'] = imgname.tolist()
 
     return data
 
+
 def extract_valid_demo(data):
     batch_size, agent_num, _, _, _ = data['img'].shape
-    valid = data['valid'].reshape(-1,)
+    valid = data['valid'].reshape(-1, )
 
     data['center'] = data['center']
     data['scale'] = data['scale']
@@ -49,19 +51,20 @@ def extract_valid_demo(data):
     data['img_w'] = data['img_w']
     data['focal_length'] = data['focal_length']
 
-    data['valid_focal_length'] = data['focal_length'].reshape(batch_size*agent_num,)[valid == 1]
+    data['valid_focal_length'] = data['focal_length'].reshape(batch_size * agent_num, )[valid == 1]
 
     return data
 
+
 def to_device(data, device):
-    imnames = {'imgname':data['imgname']} 
-    data = {k:v.to(device).float() for k, v in data.items() if k not in ['imgname']}
+    imnames = {'imgname': data['imgname']}
+    data = {k: v.to(device).float() for k, v in data.items() if k not in ['imgname']}
     data = {**imnames, **data}
 
     return data
 
-def relation_demo(model, loader, device=torch.device('cpu')):
 
+def relation_demo(model, loader, device=torch.device('cpu')):
     print('-' * 10 + 'model demo' + '-' * 10)
     model.model.eval()
     with torch.no_grad():
@@ -88,19 +91,21 @@ def relation_demo(model, loader, device=torch.device('cpu')):
 """
 Custom training function. 
 """
-def train(model, train_set:list, num_epochs=10, num_batches=20):
-    # 1.) Load dataset DatasetLoader
 
-    # 2.) Load model using ModelLoader
+
+def train(model):
+    # 1.) Load model using ModelLoader
+    # 2.) Load dataset DatasetLoader
+
 
     # 3.) set up training framework (ensure use align humans)
 
     # 4.) import and use custom loss function
     # 4a.) use separate losses for shape and translation, then add losses
-
-    train_x, train_y = train_set[0], train_set[1]
-    for epoch in range(num_epochs):
-        epoch_loss = 0
-        for i in range(num_batches):
-            #batch_data =
-            pred = model.model(batch_data)
+    print("hello world")
+    # train_x, train_y = train_set[0], train_set[1]
+    # for epoch in range(num_epochs):
+    #     epoch_loss = 0
+    #     for i in range(num_batches):
+    #         #batch_data =
+    #         pred = model.model(batch_data)
