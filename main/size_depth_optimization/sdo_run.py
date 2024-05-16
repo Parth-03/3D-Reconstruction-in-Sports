@@ -208,7 +208,7 @@ def joint_opt_use_smpl_for_reproj(
     # TODO: image shape unknown from multi-hmr output.
     # needed to make all_joints_projected
     # img_shape = torch.Tensor([832, 512])[None]
-    img_shape = torch.Tensor(img_size)[None]
+    img_shape = torch.Tensor([img_size, img_size])[None]
 
     dummy_trans = torch.Tensor([[0.0, 0.0, 0.0]]).cuda()
 
