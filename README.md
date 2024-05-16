@@ -66,6 +66,7 @@ Eugene Mak wrote train.py, added new training function to process.py, added trai
 ### To use fine-tuned model
 
 -   replace 'relation_joint.pkl' with output from training folder and run as before. You may need to rename the new model to 'relation_joint.pkl' to work out of the box.
+-   Fine-tuned models can be found here: https://drive.google.com/drive/folders/1my6j83ciXSA-pPD23VO9cmIDaj7OusMz?usp=drive_link
 
 ## Size Depth Disambiguation
 
