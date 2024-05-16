@@ -290,14 +290,13 @@ def read_all_joints(jt_arr):
     j3d_all = []
     j3d_translated_all = []
     trans_all = []
-    for jt_obj in enumerate(jt_arr):
+    for jt_obj in jt_arr:
         j3d = jt_obj["joints_3d"]
         trans = jt_obj["translation"]
-        j3d = np.array(j3d)
-        trans = np.array(trans)
+        j3d = j3d.cpu().numpy()
+        trans = trans.cpu().numpy()
 
         j3d_translated = j3d + trans
-        # save_points(j3d, 'j3d_person_%d.ply' % i)
 
         j3d_all.append(j3d)
         j3d_translated_all.append(j3d_translated)

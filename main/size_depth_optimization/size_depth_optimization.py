@@ -125,7 +125,11 @@ def run_size_depth_opt(multi_hmr_output):
         glob_kpts_all = torch.stack(
             [
                 torch.cat(
-                    [h["j2d_smplx"], torch.ones(h["j2d_smplx"].size(0), 1)], dim=1
+                    [
+                        h["j2d_smplx"],
+                        torch.ones(h["j2d_smplx"].size(0), 1, device="cuda"),
+                    ],
+                    dim=1,
                 )
                 for h in humans_arr
             ]
@@ -381,18 +385,18 @@ def joint_opt_use_smpl_for_reproj(
 
     # scales_one = np.ones([n_people + 1], dtype=np.float32)
     scales = np.ones([n_people + 1], dtype=np.float32)
-    scales[smpl_idxs] = new_scale[:, 0, 0].cpu().numpy()
+    scales[smpl_idxs] = new_scale[:, 0, 0].numpy()
 
     translations = np.zeros([n_people + 1, 1, 3], dtype=np.float32)
-    translations[smpl_idxs] = new_trans.cpu().numpy()
+    translations[smpl_idxs] = new_trans.numpy()
 
     # TODO: Again, more than 24 joints from multi hmr
     optim_joints_proj = np.zeros([n_people + 1, 24, 2], dtype=np.float32)
-    optim_joints_proj[smpl_idxs] = final_joints_projected.cpu().numpy()
-    all_joints_projected = all_joints_projected.cpu().numpy()
+    optim_joints_proj[smpl_idxs] = final_joints_projected.numpy()
+    all_joints_projected = all_joints_projected.numpy()
     optim_joints_proj[ref_person] = all_joints_projected[ref_person]
     optim_joints_3d = np.zeros([n_people + 1, 24, 3], dtype=np.float32)
-    optim_joints_3d[smpl_idxs] = final_joints_p1_t.cpu().numpy()
+    optim_joints_3d[smpl_idxs] = final_joints_p1_t.numpy()
     optim_joints_3d[ref_person] = joints_trans_all[ref_person]
 
     # if debug:
@@ -430,6 +434,18 @@ def joint_opt_use_smpl_for_reproj(
     # opt_info_file = "%s/init_smpl_estim.json" % (result_dir)
     # save_json(opt_info_file, opt_info)
 
+
+if __name__ == "__main__":
+    data_file = os.path.join(
+        "./precomputed_data", "5_output_from_pretrained_multihmr.pkl"
+    )
+    try:
+        with open(data_file, "rb") as f:
+            data = pickle.load(f)
+    except:
+        print("Data file not loaded: %s" % data_file)
+
+    run_size_depth_opt(data)
 
 # def main(args):
 #     default_models = {
