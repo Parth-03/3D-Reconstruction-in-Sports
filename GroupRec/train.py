@@ -36,12 +36,13 @@ def main(**args):
     # ============================================================ #
 
     # uncomment this and comment above if above already ran
-    # with open("data/Panda/full_Panda_imgs.pkl", "rb") as file:
+    # with open("data/Panda/Panda_imgs.pkl", "rb") as file:
     #     train_dataset = pickle.load(file)
-    print(len(train_dataset))
+    # print(len(train_dataset))
+
     # =================== Processing labels ====================== #
-    with open("data/Panda/Panda_labels.pkl", "rb") as file:
-        data_labels = pickle.load(file)
+    with open("data/Panda/Panda.pkl", "rb") as file:
+        data_list = pickle.load(file)
     train_x_path = "data/Panda/images/Det"
     # ground truth. train_y is stripped down version of original labels, since dataset is missing some.
     # missing img paths, but should now be in order of the dataset.
@@ -49,10 +50,12 @@ def main(**args):
     i = 0
     for sub_dir, _, files in os.walk(train_x_path):
         for filename in files:
+            if i == 3:
+                break
             corresponding_dict = None
             parent_folder = os.path.basename(sub_dir)
             image_identifier = os.path.join(parent_folder, filename)
-            for data in data_labels:
+            for data in data_list:
                 if os.path.join(os.path.basename(os.path.dirname(data["img_path"])),
                                 os.path.basename(data["img_path"])) == image_identifier:
                     corresponding_dict = data
@@ -66,8 +69,14 @@ def main(**args):
             print(i)
             i += 1
     assert len(train_y) == len(train_dataset)
+
+    with open("data/Panda/Panda_labels.pkl", 'wb') as file:
+        pickle.dump(train_y, file)
+    data_labels = train_y
     # ========================================================= #
-    return
+    #
+    # with open("data/Panda/Panda_labels.pkl", 'rb') as file:
+    #     data_labels = pickle.load(file)
 
     # Load model
     print("Loading model...")

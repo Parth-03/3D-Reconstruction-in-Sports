@@ -34,7 +34,6 @@ class DemoData(base):
         model_dir = R'data/bytetrack_x_mot17.pth.tar'
         thres = 0.23
         predictor = Predictor(model_dir, thres)
-
         for i, img in enumerate(self.imnames):
             print(f"Processing image {i}")
             # GT intri for JTA
@@ -78,10 +77,9 @@ class DemoData(base):
         try:
             img = cv2.imread(imgname)[:, :, ::-1].copy().astype(np.float32)
         except TypeError:
-            print(imgname)
+            print("TypeError", imgname)
         img_h, img_w, _ = img.shape
         load_data["imgname"] = imgname
-
         batch_size = len(annot['bbox']) // self.max_people + 1
 
         norm_imgs = torch.zeros((batch_size, self.max_people, 3, 224, 224)).float()

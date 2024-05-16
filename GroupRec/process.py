@@ -11,6 +11,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 import time
+from copy import copy
 
 
 def extract_valid(data):
@@ -95,19 +96,78 @@ Custom training function.
 
 def process_batch(batch, model, device):
     batch_output = []
-    for image in batch:
-        input = torch.from_numpy(image).to(device)
-        pred = model(input)
+    for data in batch:
+        data = to_device(data, device)
+        data = extract_valid_demo(data)  # not really sure what this does or how it differs from extract _demo
+        pred = model.model(data)
         batch_output.append(pred)
     return batch_output
 
 
-def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=20):
+# remove extra humans based on detection score
+def align_humans(predictions, gts):
+    predictions = copy(predictions)
+    gts = copy(gts)
+    aligned_preds = []
+    aligned_gts = []
+    for pred, gt in zip(predictions, gts):
+        while (pred_length := pred['pred_cam_t'].shape[0]) > len(gt):
+            # detection score doesn't exist, so have to do some random guess as to which is incorrect
+            index = np.random.randint(pred_length)
+            pred['pred_cam_t'] = torch.cat((pred['pred_cam_t'][:index], pred['pred_cam_t'][index + 1:]))
+        while pred_length < len(gt):
+            gt = gt[:len(gt) - 1]
+
+        assert pred_length == len(gt)
+        aligned_preds.append(pred)
+        aligned_gts.append(gt)
+
+    assert len(aligned_preds) == len(aligned_gts)
+    return aligned_preds, aligned_gts
+
+
+def smpl_params_loss(predictions, gts, fields, gt_fields, device) -> torch.Tensor:
+    # second dimension is 3 because translations only have 3. Yeah this is some bad hardcoding...
+    all_preds = []
+    all_gts = []
+
+    total_loss = torch.empty((0, 1), dtype=torch.float32).to(device)
+
+    for field in fields:
+        curr_preds = torch.empty((0, 3), dtype=torch.float32).to(device)
+        for pred_img in predictions:
+            preds_humans = pred_img[field]
+            curr_preds = torch.cat((curr_preds, preds_humans))
+        all_preds.append(curr_preds)
+    for field in gt_fields:
+        curr_gts = []
+        for humans in gts:
+            curr_values = []
+            for human in humans:
+                curr_values.append(human[field])
+            curr_gts.append(curr_values)
+        all_gts.append(curr_gts)
+
+    criterion = torch.nn.L1Loss()
+    #criterion = torch.nn.MSELoss()
+    for i, field in enumerate(fields):
+        # convert to tensors
+        all_gts[i] = torch.from_numpy(np.stack([item for sublist in all_gts[i] for item in sublist]))
+        all_preds[i] = all_preds[i].to(device)
+        all_gts[i] = all_gts[i].to(device)
+        total_loss += criterion(all_preds[i], all_gts[i])
+    return total_loss
+
+
+def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=1):
     num_batches = loader.len // batch_size - 1
     print(num_batches)
 
     # Shuffle data. Do this by shuffling indices, using indices to get data and labels, thus ensuring a match.
     data_indices = np.arange(len(labels))
+    rng = np.random.default_rng()
+    rng.shuffle(data_indices)
+
     # 3.) set up training framework (ensure use align humans)
     epoch_losses = []
     batch_losses = []
@@ -123,18 +183,29 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
             print(f"Processing batch {i + 1}/{num_batches} with {len(batch_imgs)} samples")
             optimizer.zero_grad()
             batch_output = process_batch(batch_imgs, model, device)
-
+            # output is an array of these:
+            # pred = {'pred_pose': pred_pose, \
+            #         'pred_shape': pred_shape, \
+            #         'pred_cam_t': pred_trans, \
+            #         'pred_rotmat': pred_rotmat, \
+            #         'pred_verts': pred_verts, \
+            #         'pred_joints': pred_joints, \
+            #         'focal_length': focal_length, \
+            #         'pred_keypoints_2d': pred_keypoints_2d, \
+            #         }
+            # batch output may have less shape and translation to align
             batch_output, batch_labels = align_humans(batch_output, batch_labels)
+            print("aligned humans!")
             # 4.) import and use custom loss function
             # 4a.) use separate losses for shape and translation, then add losses
-            batch_loss = smpl_params_loss(batch_output, batch_labels, ['transl'], ['trans'])
+            batch_loss = smpl_params_loss(batch_output, batch_labels, ['pred_cam_t'], ['trans'], device)
 
             if torch.isnan(batch_loss):
                 print(f"NaN detected in loss at batch {i + 1}")
 
             batch_loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.01)
+            torch.nn.utils.clip_grad_norm_(model.model.parameters(), max_norm=0.01)
             optimizer.step()
 
             # Record loss
@@ -146,11 +217,11 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
             del batch_labels, batch_imgs, batch_output, batch_loss
             torch.cuda.empty_cache()
 
-            for name, param in model.named_parameters():
+            for name, param in model.model.named_parameters():
                 if param.requires_grad:
-                    print(f"{name} param norm: {param.norm()}")
+                    pass
+                   # print(f"{name} param norm: {param.norm()}")
 
         average_epoch_loss = epoch_loss / (num_batches)
         epoch_losses.append(average_epoch_loss)
         print(f"Epoch {epoch + 1} Average Loss: {average_epoch_loss}")
-
