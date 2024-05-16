@@ -93,19 +93,25 @@ Custom training function.
 """
 
 
-def train(model):
-    # 1.) Load model using ModelLoader
-    # 2.) Load dataset DatasetLoader
+def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=20):
+    num_batches = loader.len // batch_size - 1
+    print(num_batches)
 
-
+    # Shuffle data. Shuffle labels, find indices corresponding to original order, use indices to get data.
     # 3.) set up training framework (ensure use align humans)
+    for epoch in range(num_epochs):
+        epoch_loss = 0
+        for i in range(num_batches):
+            if i != num_batches - 1:
+                batch_imgs = train_x[i * batch_size: (i + 1) * batch_size]
+                batch_labels = labels[i * batch_size: (i + 1) * batch_size]
+            else:  # add remainder
+                batch_imgs = train_x[i * batch_size:]
+                batch_labels = labels[i * batch_size:]
+            optimizer.zero_grad()
+            #batch_data =
+           # pred = model.model(batch_data)
 
     # 4.) import and use custom loss function
     # 4a.) use separate losses for shape and translation, then add losses
-    print("hello world")
-    # train_x, train_y = train_set[0], train_set[1]
-    # for epoch in range(num_epochs):
-    #     epoch_loss = 0
-    #     for i in range(num_batches):
-    #         #batch_data =
-    #         pred = model.model(batch_data)
+
