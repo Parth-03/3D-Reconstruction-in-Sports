@@ -1,20 +1,20 @@
 import numpy as np
 from PIL import Image
 import cv2
-import trimesh
+# import trimesh
 import pickle
 import torch
 import json
 import os
-import open3d as o3d
+# import open3d as o3d
 import scipy.io
 import scipy.io as scio
 
 
-pcd = o3d.geometry.PointCloud()
-# colors for visualization
-COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
-          [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
+# pcd = o3d.geometry.PointCloud()
+# # colors for visualization
+# COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
+#           [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
 
 
 def get_heigths(j3d_height):

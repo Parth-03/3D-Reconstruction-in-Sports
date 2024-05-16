@@ -13,7 +13,7 @@ Yuni wrote run_sdo.py. It contains the size and depth optimization code for the 
 In order to run it, please follow the following steps:
 
 1. Clone the repository.
-2. Run the requirements.txt file in the GroupRec folder. Alternatively, feel free to use the requirements files from the other folders although some libries are out of date and would involve manually installation.
+2. Run the requirements.txt file in the GroupRec folder. Alternatively, feel free to use the requirements files from the other folders although some libries are out of date and would involve manual installation.
 3. From the drive, download the model files and place them accordingly-
     - finetuned-multiHMR_896_L.pt and SMPLX_Neutral.npz into main/models
     - bytetrack_x_mot17.pth, relation_joint.pkl, SMPL_Neutral.pkl and SMPL_MEAN_PARAMS.npz in main/data
