@@ -272,6 +272,8 @@ def joint_opt_use_smpl_for_reproj(
     # We could just start from a random tensor, not from trans_to_inter and trans_iter_t?
     # trans_to_inter[:, None, :]: numpy array with shape (3,1,3)
     # trans_iter_t: torch tensor with shape [3,1,1]
+    trans_to_inter = np.random.rand(3, 1, 3)
+    trans_iter_t = torch.randn(3, 1, 1)
     opt_trans = torch.tensor(
         trans_to_inter[:, None, :],
         requires_grad=True,
