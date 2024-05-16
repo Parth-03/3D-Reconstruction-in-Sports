@@ -66,7 +66,7 @@ Required format from original paper (output of precompute process):
 """
 
 
-def run_size_depth_opt(multi_hmr_output):
+def run_size_depth_opt(multi_hmr_output, img_size):
     # set torch options
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
@@ -77,6 +77,8 @@ def run_size_depth_opt(multi_hmr_output):
     n_iters = 2000
     rotate_plane = 0
     horizontal_scale = 1.0
+
+    results = []
 
     num_images = len(multi_hmr_output)
 
@@ -122,18 +124,18 @@ def run_size_depth_opt(multi_hmr_output):
 
         # h = data["h"]
         # w = data["w"]
-        glob_kpts_all = torch.stack(
-            [
-                torch.cat(
-                    [
-                        h["j2d_smplx"],
-                        torch.ones(h["j2d_smplx"].size(0), 1, device="cuda"),
-                    ],
-                    dim=1,
-                )
-                for h in humans_arr
-            ]
-        )
+        # glob_kpts_all = torch.stack(
+        #     [
+        #         torch.cat(
+        #             [
+        #                 h["j2d_smplx"],
+        #                 torch.ones(h["j2d_smplx"].size(0), 1, device="cuda"),
+        #             ],
+        #             dim=1,
+        #         )
+        #         for h in humans_arr
+        #     ]
+        # )
         # joint_names = data["joint_names"]
 
         # array of objects with key 'joints_3d' and 'translation'
@@ -148,7 +150,7 @@ def run_size_depth_opt(multi_hmr_output):
         # img_w_j = draw_lsp_14kp__bone(img_w_j, lsp_joints[1])
         # plt.imsave("./test_w_skel.png", img_w_j)
 
-        joint_opt_use_smpl_for_reproj(
+        result_obj = joint_opt_use_smpl_for_reproj(
             # image,
             # folder,
             # name,
@@ -159,15 +161,18 @@ def run_size_depth_opt(multi_hmr_output):
             # h,
             # w,
             # args,
-            glob_kpts_all,
+            # glob_kpts_all,
             jt_arr,
-            plane_scale,
-            negative_plane,
+            # plane_scale,
+            # negative_plane,
             n_iters,
-            rotate_plane,
-            horizontal_scale,
+            # rotate_plane,
+            # horizontal_scale,
+            img_size,
         )
+        results.append(result_obj)
     print("finished")
+    return results
 
 
 def joint_opt_use_smpl_for_reproj(
@@ -181,13 +186,14 @@ def joint_opt_use_smpl_for_reproj(
     # h,
     # w,
     # args,
-    all_gt_keypoints,
+    # all_gt_keypoints,
     jt_arr,
-    plane_scale,
-    negative_plane,
+    # plane_scale,
+    # negative_plane,
     n_iters,
-    rotate_plane,
-    horizontal_scale,
+    # rotate_plane,
+    # horizontal_scale,
+    img_size,
 ):
     """ """
 
@@ -201,7 +207,8 @@ def joint_opt_use_smpl_for_reproj(
 
     # TODO: image shape unknown from multi-hmr output.
     # needed to make all_joints_projected
-    img_shape = torch.Tensor([832, 512])[None]
+    # img_shape = torch.Tensor([832, 512])[None]
+    img_shape = torch.Tensor(img_size)[None]
 
     dummy_trans = torch.Tensor([[0.0, 0.0, 0.0]]).cuda()
 
@@ -211,6 +218,8 @@ def joint_opt_use_smpl_for_reproj(
     all_joints_projected = project_joints_to_img(
         joints_trans_all_t, img_shape, dummy_trans
     )
+
+    # a bit random
     ref_person = 1
 
     # ankles_translated = joints_trans_all[:, [0, 5]]
@@ -430,14 +439,7 @@ def joint_opt_use_smpl_for_reproj(
     # opt_info_file = "%s/optim_result.json" % (result_dir)
     # save_json(opt_info_file, opt_info)
 
-    # opt_info = {
-    #     "scale": [scales_one.tolist()],
-    #     "translations": trans_all.tolist(),
-    #     "joints2d": all_joints_projected.tolist(),
-    #     "joints3d": joints_trans_all.tolist(),
-    # }
-    # opt_info_file = "%s/init_smpl_estim.json" % (result_dir)
-    # save_json(opt_info_file, opt_info)
+    # opt_info = {ave the optimization results
 
 
 if __name__ == "__main__":
