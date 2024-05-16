@@ -482,7 +482,6 @@ class ModelLoader():
 
             proj_joints, _ = joint_projection(pred_joints[5:19], np.eye(4), intri, img, viz=False)
             proj_joints = proj_joints.astype(np.int)
-            print(proj_joints)
             for c, limb in enumerate(Pose.LIMBS_HALPE_14):
                 img = cv2.line(img, tuple(proj_joints[limb[0]]), tuple(proj_joints[limb[1]]), (0,255,255), 3)
 

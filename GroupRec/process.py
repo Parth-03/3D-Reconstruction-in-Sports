@@ -84,3 +84,23 @@ def relation_demo(model, loader, device=torch.device('cpu')):
                 results.update(pred_verts=pred['pred_verts'].detach().cpu().numpy().astype(np.float32))
                 model.save_demo_results(results, i, batchsize)
 
+
+"""
+Custom training function. 
+"""
+def train(model, train_set:list, num_epochs=10, num_batches=20):
+    # 1.) Load dataset DatasetLoader
+
+    # 2.) Load model using ModelLoader
+
+    # 3.) set up training framework (ensure use align humans)
+
+    # 4.) import and use custom loss function
+    # 4a.) use separate losses for shape and translation, then add losses
+
+    train_x, train_y = train_set[0], train_set[1]
+    for epoch in range(num_epochs):
+        epoch_loss = 0
+        for i in range(num_batches):
+            #batch_data =
+            pred = model.model(batch_data)
