@@ -26,12 +26,23 @@ Scott Fortune wrote train_panda.ipynb and train_ipynb, except for the functions 
 
 ### To use fine-tuned model
 
+
 - load "fine_tuned_multiHMR_986_L.pkl" using pickle.load and replace " model = load_model(...)" *note: don't use load_model() because we couldn't match the fine-tuned model to the same format*
     - "fine_tuned_multiHMR_986_L.pkl" is currently in https://drive.google.com/drive/folders/1Q1aPaijgNfIXs7jdN-q_kdp2Bnh0VMb- since it was too large to add to github
 
 ## Group Rec
 
 ### Contributors
+Eugene Mak wrote train.py, added new training function to process.py, added training data class to demo_data.py. Helper methods for aligning humans and SMPL loss based off Multi-HMR version by Scott Fortune. 
+
+### To run train.py
+
+- Follow instructions in GroupRec/README.md to set up environment for the model. You will need the pretrained model and other required data to put in the GroupRec/data folder, found here: https://drive.google.com/drive/folders/1eHi8WBiZsQDh2O5rE3rd_DvQjXJwp-8y?usp=drive_link
+- Follow instructions in Panda/Readme.txt to install Panda dataset for training. Ensure that file structure is as follows: data/Panda/images/Det/[subfolders inside images_train]
+- Recommended: run img_resizer to resize the giant Panda images to 1080p for faster training and processing. Ensure the output is in the location as above.
+- run: python train.py
+- Configure training settings in cfg_files/train.yaml
+- new model will be saved in output/training folder.
 
 ## Size Depth Disambiguation
 
