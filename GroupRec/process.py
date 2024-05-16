@@ -131,7 +131,7 @@ def smpl_params_loss(predictions, gts, fields, gt_fields, device) -> torch.Tenso
     all_preds = []
     all_gts = []
 
-    total_loss = torch.empty((0, 1), dtype=torch.float32).to(device)
+    total_loss = 0
 
     for field in fields:
         curr_preds = torch.empty((0, 3), dtype=torch.float32).to(device)
@@ -159,7 +159,15 @@ def smpl_params_loss(predictions, gts, fields, gt_fields, device) -> torch.Tenso
     return total_loss
 
 
-def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=1):
+def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=20):
+    torch.set_grad_enabled(True)
+    # freeze parameters
+    for name, param in model.model.named_parameters():
+        if 'x_attention_head' not in name:
+            param.requires_grad = False
+        else:
+            param.requires_grad = True
+
     num_batches = loader.len // batch_size - 1
     print(num_batches)
 
@@ -183,16 +191,8 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
             print(f"Processing batch {i + 1}/{num_batches} with {len(batch_imgs)} samples")
             optimizer.zero_grad()
             batch_output = process_batch(batch_imgs, model, device)
-            # output is an array of these:
-            # pred = {'pred_pose': pred_pose, \
-            #         'pred_shape': pred_shape, \
-            #         'pred_cam_t': pred_trans, \
-            #         'pred_rotmat': pred_rotmat, \
-            #         'pred_verts': pred_verts, \
-            #         'pred_joints': pred_joints, \
-            #         'focal_length': focal_length, \
-            #         'pred_keypoints_2d': pred_keypoints_2d, \
-            #         }
+            # output is an array of preds. For pred format, see relation_joint
+
             # batch output may have less shape and translation to align
             batch_output, batch_labels = align_humans(batch_output, batch_labels)
             print("aligned humans!")
@@ -202,7 +202,7 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
 
             if torch.isnan(batch_loss):
                 print(f"NaN detected in loss at batch {i + 1}")
-
+            batch_loss.requires_grad = True
             batch_loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.model.parameters(), max_norm=0.01)
@@ -217,11 +217,11 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
             del batch_labels, batch_imgs, batch_output, batch_loss
             torch.cuda.empty_cache()
 
-            for name, param in model.model.named_parameters():
-                if param.requires_grad:
-                    pass
-                   # print(f"{name} param norm: {param.norm()}")
+            # for name, param in model.model.named_parameters():
+            #     if param.requires_grad:
+            #        print(f"{name} param norm: {param.norm()}")
 
-        average_epoch_loss = epoch_loss / (num_batches)
+        average_epoch_loss = epoch_loss / num_batches
         epoch_losses.append(average_epoch_loss)
         print(f"Epoch {epoch + 1} Average Loss: {average_epoch_loss}")
+    model.save_model()
