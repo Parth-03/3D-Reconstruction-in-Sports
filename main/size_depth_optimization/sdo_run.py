@@ -125,7 +125,11 @@ def run_size_depth_opt(multi_hmr_output):
         glob_kpts_all = torch.stack(
             [
                 torch.cat(
-                    [h["j2d_smplx"], torch.ones(h["j2d_smplx"].size(0), 1)], dim=1
+                    [
+                        h["j2d_smplx"],
+                        torch.ones(h["j2d_smplx"].size(0), 1, device="cuda"),
+                    ],
+                    dim=1,
                 )
                 for h in humans_arr
             ]
@@ -187,11 +191,11 @@ def joint_opt_use_smpl_for_reproj(
 ):
     """ """
 
-    obj_filename = "%s/%s_TRANS_person*.obj" % (folder, iname_strip)
-    ori_meshes_n = glob.glob(obj_filename)
-    ori_meshes_n.sort()
-    for meshn in ori_meshes_n:
-        shutil.copy(meshn, result_dir)
+    # obj_filename = "%s/%s_TRANS_person*.obj" % (folder, iname_strip)
+    # ori_meshes_n = glob.glob(obj_filename)
+    # ori_meshes_n.sort()
+    # for meshn in ori_meshes_n:
+    #     shutil.copy(meshn, result_dir)
 
     criterion = MSELoss(reduction="none")
 
@@ -268,6 +272,10 @@ def joint_opt_use_smpl_for_reproj(
     # We could just start from a random tensor, not from trans_to_inter and trans_iter_t?
     # trans_to_inter[:, None, :]: numpy array with shape (3,1,3)
     # trans_iter_t: torch tensor with shape [3,1,1]
+    ankles_shape = ankles.shape
+    trans_to_inter = np.random.rand(*ankles_shape)
+    trans_iter_t = torch.tensor(trans_to_inter, device="cuda")
+
     opt_trans = torch.tensor(
         trans_to_inter[:, None, :],
         requires_grad=True,
@@ -387,11 +395,12 @@ def joint_opt_use_smpl_for_reproj(
     translations[smpl_idxs] = new_trans.cpu().numpy()
 
     # TODO: Again, more than 24 joints from multi hmr
-    optim_joints_proj = np.zeros([n_people + 1, 24, 2], dtype=np.float32)
+    num_joints = 127
+    optim_joints_proj = np.zeros([n_people + 1, num_joints, 2], dtype=np.float32)
     optim_joints_proj[smpl_idxs] = final_joints_projected.cpu().numpy()
     all_joints_projected = all_joints_projected.cpu().numpy()
     optim_joints_proj[ref_person] = all_joints_projected[ref_person]
-    optim_joints_3d = np.zeros([n_people + 1, 24, 3], dtype=np.float32)
+    optim_joints_3d = np.zeros([n_people + 1, num_joints, 3], dtype=np.float32)
     optim_joints_3d[smpl_idxs] = final_joints_p1_t.cpu().numpy()
     optim_joints_3d[ref_person] = joints_trans_all[ref_person]
 
@@ -430,6 +439,10 @@ def joint_opt_use_smpl_for_reproj(
     # opt_info_file = "%s/init_smpl_estim.json" % (result_dir)
     # save_json(opt_info_file, opt_info)
 
+
+if __name__ == "__main__":
+    data = MULTI_HMR_OUTPUT_LIST
+    run_size_depth_opt(data)
 
 # def main(args):
 #     default_models = {
