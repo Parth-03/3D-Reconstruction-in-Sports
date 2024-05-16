@@ -191,11 +191,11 @@ def joint_opt_use_smpl_for_reproj(
 ):
     """ """
 
-    obj_filename = "%s/%s_TRANS_person*.obj" % (folder, iname_strip)
-    ori_meshes_n = glob.glob(obj_filename)
-    ori_meshes_n.sort()
-    for meshn in ori_meshes_n:
-        shutil.copy(meshn, result_dir)
+    # obj_filename = "%s/%s_TRANS_person*.obj" % (folder, iname_strip)
+    # ori_meshes_n = glob.glob(obj_filename)
+    # ori_meshes_n.sort()
+    # for meshn in ori_meshes_n:
+    #     shutil.copy(meshn, result_dir)
 
     criterion = MSELoss(reduction="none")
 
@@ -389,18 +389,19 @@ def joint_opt_use_smpl_for_reproj(
 
     # scales_one = np.ones([n_people + 1], dtype=np.float32)
     scales = np.ones([n_people + 1], dtype=np.float32)
-    scales[smpl_idxs] = new_scale[:, 0, 0].numpy()
+    scales[smpl_idxs] = new_scale[:, 0, 0].cpu().numpy()
 
     translations = np.zeros([n_people + 1, 1, 3], dtype=np.float32)
-    translations[smpl_idxs] = new_trans.numpy()
+    translations[smpl_idxs] = new_trans.cpu().numpy()
 
     # TODO: Again, more than 24 joints from multi hmr
-    optim_joints_proj = np.zeros([n_people + 1, 24, 2], dtype=np.float32)
-    optim_joints_proj[smpl_idxs] = final_joints_projected.numpy()
-    all_joints_projected = all_joints_projected.numpy()
+    num_joints = 127
+    optim_joints_proj = np.zeros([n_people + 1, num_joints, 2], dtype=np.float32)
+    optim_joints_proj[smpl_idxs] = final_joints_projected.cpu().numpy()
+    all_joints_projected = all_joints_projected.cpu().numpy()
     optim_joints_proj[ref_person] = all_joints_projected[ref_person]
-    optim_joints_3d = np.zeros([n_people + 1, 24, 3], dtype=np.float32)
-    optim_joints_3d[smpl_idxs] = final_joints_p1_t.numpy()
+    optim_joints_3d = np.zeros([n_people + 1, num_joints, 3], dtype=np.float32)
+    optim_joints_3d[smpl_idxs] = final_joints_p1_t.cpu().numpy()
     optim_joints_3d[ref_person] = joints_trans_all[ref_person]
 
     # if debug:
