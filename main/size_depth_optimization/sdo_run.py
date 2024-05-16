@@ -441,15 +441,7 @@ def joint_opt_use_smpl_for_reproj(
 
 
 if __name__ == "__main__":
-    data_file = os.path.join(
-        "./precomputed_data", "5_output_from_pretrained_multihmr.pkl"
-    )
-    try:
-        with open(data_file, "rb") as f:
-            data = pickle.load(f)
-    except:
-        print("Data file not loaded: %s" % data_file)
-
+    data = MULTI_HMR_OUTPUT_LIST
     run_size_depth_opt(data)
 
 # def main(args):
