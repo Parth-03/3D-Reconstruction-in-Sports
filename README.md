@@ -44,6 +44,9 @@ Eugene Mak wrote train.py, added new training function to process.py, added trai
 - Configure training settings in cfg_files/train.yaml
 - new model will be saved in output/training folder.
 
+### To use fine-tuned model
+- replace 'relation_joint.pkl' with output from training folder and run as before. You may need to rename the new model to 'relation_joint.pkl' to work out of the box.
+  
 ## Size Depth Disambiguation
 
 ### Contributors
