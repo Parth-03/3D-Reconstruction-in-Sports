@@ -1,6 +1,8 @@
 # 3D-Reconstruction-in-Sports
 Multi Human 3D Reconstruction from single RGB images for various scenarios in Sports
 
+Github: https://github.com/Parth-03/3D-Reconstruction-in-Sports
+
 ## Main
 
 ### Contributors
