@@ -12,7 +12,8 @@ import cv2
 from tqdm import tqdm
 import time
 from copy import copy
-
+import pickle
+from torch.utils.tensorboard import SummaryWriter
 
 def extract_valid(data):
     batch_size, agent_num, d = data['keypoints'].shape[:3]
@@ -119,6 +120,7 @@ def align_humans(predictions, gts):
             gt = gt[:len(gt) - 1]
 
         assert pred_length == len(gt)
+
         aligned_preds.append(pred)
         aligned_gts.append(gt)
 
@@ -126,61 +128,57 @@ def align_humans(predictions, gts):
     return aligned_preds, aligned_gts
 
 
-def smpl_params_loss(predictions, gts, fields, gt_fields, device) -> torch.Tensor:
-    # second dimension is 3 because translations only have 3. Yeah this is some bad hardcoding...
-    all_preds = []
-    all_gts = []
+def smpl_trans_loss(predictions, gts, field, gt_field, device) -> torch.Tensor:
 
     total_loss = 0
+    all_preds = torch.empty((0, 3), dtype=torch.float32).to(device)
+    for pred_img in predictions:
+        preds_humans = pred_img[field]
+        all_preds = torch.cat((all_preds, preds_humans))
 
-    for field in fields:
-        curr_preds = torch.empty((0, 3), dtype=torch.float32).to(device)
-        for pred_img in predictions:
-            preds_humans = pred_img[field]
-            curr_preds = torch.cat((curr_preds, preds_humans))
-        all_preds.append(curr_preds)
-    for field in gt_fields:
-        curr_gts = []
-        for humans in gts:
-            curr_values = []
-            for human in humans:
-                curr_values.append(human[field])
-            curr_gts.append(curr_values)
-        all_gts.append(curr_gts)
+    all_gts = []
+    for humans in gts:
+        for human in humans:
+            all_gts.append(human[gt_field])
 
-    criterion = torch.nn.L1Loss()
-    #criterion = torch.nn.MSELoss()
-    for i, field in enumerate(fields):
-        # convert to tensors
-        all_gts[i] = torch.from_numpy(np.stack([item for sublist in all_gts[i] for item in sublist]))
-        all_preds[i] = all_preds[i].to(device)
-        all_gts[i] = all_gts[i].to(device)
-        total_loss += criterion(all_preds[i], all_gts[i])
+    #criterion = torch.nn.L1Loss()
+    criterion = torch.nn.MSELoss()
+
+    all_gts = torch.stack([torch.tensor(item).to(device) for item in all_gts])
+
+    # sort tuples themselves
+    preds, _ = torch.sort(all_preds)
+    curr_gts, _ = torch.sort(all_gts)
+
+    # sort tuples based on first element
+    preds, _ = torch.sort(preds, 0)
+    curr_gts, _ = torch.sort(curr_gts, 0)
+    total_loss += criterion(preds, curr_gts)
     return total_loss
 
 
-def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epochs=10, batch_size=20):
+def train(model, loader, labels, device=torch.device('cpu'), num_epochs=10, batch_size=20):
     torch.set_grad_enabled(True)
+
     # freeze parameters
     for name, param in model.model.named_parameters():
-        if 'x_attention_head' not in name:
+        if 'cam_head' not in name:
             param.requires_grad = False
         else:
             param.requires_grad = True
 
-    num_batches = loader.len // batch_size - 1
-    print(num_batches)
+    num_batches = loader.len % batch_size
 
     # Shuffle data. Do this by shuffling indices, using indices to get data and labels, thus ensuring a match.
     data_indices = np.arange(len(labels))
     rng = np.random.default_rng()
     rng.shuffle(data_indices)
 
-    # 3.) set up training framework (ensure use align humans)
     epoch_losses = []
     batch_losses = []
     for epoch in range(num_epochs):
         epoch_loss = 0
+        print(f"Epoch: {epoch+1}")
         for i in range(num_batches):
             if i != num_batches - 1:
                 batch_labels = [labels[j] for j in data_indices[i * batch_size: (i + 1) * batch_size]]
@@ -189,29 +187,29 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
                 batch_labels = [labels[j] for j in data_indices[i * batch_size:]]
                 batch_imgs = [loader[j] for j in data_indices[i * batch_size:]]
             print(f"Processing batch {i + 1}/{num_batches} with {len(batch_imgs)} samples")
-            optimizer.zero_grad()
+            model.optimizer.zero_grad()
             batch_output = process_batch(batch_imgs, model, device)
             # output is an array of preds. For pred format, see relation_joint
 
             # batch output may have less shape and translation to align
             batch_output, batch_labels = align_humans(batch_output, batch_labels)
-            print("aligned humans!")
+           # print("aligned humans!")
             # 4.) import and use custom loss function
             # 4a.) use separate losses for shape and translation, then add losses
-            batch_loss = smpl_params_loss(batch_output, batch_labels, ['pred_cam_t'], ['trans'], device)
+            batch_loss = smpl_trans_loss(batch_output, batch_labels, 'pred_cam_t', 'trans', device)
 
             if torch.isnan(batch_loss):
                 print(f"NaN detected in loss at batch {i + 1}")
-            batch_loss.requires_grad = True
             batch_loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.model.parameters(), max_norm=0.01)
-            optimizer.step()
+            model.optimizer.step()
+
 
             # Record loss
             batch_losses.append(batch_loss.item())
             epoch_loss += batch_loss.item()
-            print(f"Epoch {epoch + 1}, Batch {(i + 1)}, Loss: {batch_loss.item()}")
+            print(f"Loss: {batch_loss.item()}")
 
             # Clean up
             del batch_labels, batch_imgs, batch_output, batch_loss
@@ -224,4 +222,7 @@ def train(model, loader, labels, optimizer, device=torch.device('cpu'), num_epoc
         average_epoch_loss = epoch_loss / num_batches
         epoch_losses.append(average_epoch_loss)
         print(f"Epoch {epoch + 1} Average Loss: {average_epoch_loss}")
+
+    with open("data/Panda/epoch_losses.pkl", 'wb') as file:
+        pickle.dump(epoch_losses, file)
     model.save_model()

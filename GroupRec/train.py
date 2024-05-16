@@ -80,8 +80,7 @@ def main(**args):
     print("Loading model...")
     model = ModelLoader(dtype=dtype, device=device, output=out_dir, **args)
     print("Model loaded.")
-    optimizer = optim.Adam(model.model.parameters(), lr=0.0001)
-    train(model, train_dataset, data_labels, optimizer, device=device)
+    train(model, train_dataset, data_labels, device=device)
 
 
 if __name__ == "__main__":
