@@ -51,7 +51,7 @@ nbformat==5.7.0
 nest-asyncio==1.5.8
 networkx==3.1
 numpy==1.23.5
-open3d==0.17.0
+open3d==0.18.0
 opencv-python==4.8.0.74
 packaging==23.1
 parso==0.8.3
@@ -62,7 +62,7 @@ platformdirs==3.10.0
 plotly==5.17.0
 prompt-toolkit==3.0.39
 pure-eval==0.2.2
-
+# pycocotools==2.0 # had issues with installing, pip nstall manually
 pyface==8.0.0
 pyglet==2.0.8
 Pygments==2.16.1
